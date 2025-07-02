@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Swap Visualizer | 42</title>
     
-    <!-- Importation de Tailwind CSS pour le style -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Importation de la police Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +28,7 @@
             will-change: transform;
         }
         
+        /* Style pour la barre de défilement */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -45,6 +44,7 @@
             background: #6B7280; /* gray-500 */
         }
         
+        /* Animation pour le message de fin */
         @keyframes finalMessage {
             from {
                 opacity: 0;
@@ -63,7 +63,7 @@
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
     <div id="mainApp" class="w-full max-w-7xl mx-auto">
-
+        
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
             <p id="subtitle" class="text-gray-400 mt-2">Un outil interactif pour visualiser vos algorithmes de tri.</p>
@@ -100,7 +100,7 @@
                     <div class="flex items-center gap-4 bg-gray-900 p-3 rounded-lg">
                         <input type="checkbox" id="limitMovesCheckbox" class="h-6 w-6 rounded bg-gray-700 border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer">
                         <label for="limitMovesCheckbox" class="text-gray-300 select-none cursor-pointer">Activer la limite</label>
-                        <input id="maxMovesInput" class="w-full bg-gray-700 rounded-lg p-2 text-gray-200 border border-gray-600 focus:ring-2 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nombre max d'opérations" disabled>
+                        <input type="number" id="maxMovesInput" class="w-full bg-gray-700 rounded-lg p-2 text-gray-200 border border-gray-600 focus:ring-2 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nombre max d'opérations" disabled>
                     </div>
                 </div>
             </div>
@@ -208,28 +208,106 @@
             let a = [...initialNumbers];
             let b = [];
             let moves = [];
-            const initialLength = a.length;
-            for (let i = 0; i < initialLength; i++) {
+
+            if (a.length <= 1) return [];
+            if (a.length === 2) {
+                if (a[0] > a[1]) return ['sa'];
+                return [];
+            }
+            if (a.length === 3) {
+                const [n1, n2, n3] = a;
+                if (n1 > n2 && n2 < n3 && n1 < n3) return ['sa'];
+                if (n1 > n2 && n2 > n3 && n1 > n3) return ['sa', 'rra'];
+                if (n1 > n2 && n2 < n3 && n1 > n3) return ['ra'];
+                if (n1 < n2 && n2 > n3 && n1 < n3) return ['sa', 'ra'];
+                if (n1 < n2 && n2 > n3 && n1 > n3) return ['rra'];
+                return [];
+            }
+            
+            while (a.length > 3) {
                 moves.push('pb');
+                b.push(a.shift());
             }
-            b = [...a].reverse();
-            a = [];
+
+            const lastThreeMoves = solvePushSwap(a);
+            moves.push(...lastThreeMoves);
+            const tempA = [...a];
+            lastThreeMoves.forEach(move => {
+                switch (move) {
+                    case 'sa': [tempA[0], tempA[1]] = [tempA[1], tempA[0]]; break;
+                    case 'ra': tempA.push(tempA.shift()); break;
+                    case 'rra': tempA.unshift(tempA.pop()); break;
+                }
+            });
+            a = tempA;
+
+
             while (b.length > 0) {
-                let max = -Infinity, maxIndex = -1;
+                let bestCost = Infinity;
+                let bestMoves = [];
+
                 for (let i = 0; i < b.length; i++) {
-                    if (b[i] > max) { max = b[i]; maxIndex = i; }
+                    const numToPush = b[i];
+                    
+                    let targetIndex = a.findIndex(val => val > numToPush);
+                    if (targetIndex === -1) {
+                        let maxInA = -Infinity, maxIndexInA = -1;
+                        for(let j=0; j<a.length; j++) {
+                            if(a[j] > maxInA) {
+                                maxInA = a[j];
+                                maxIndexInA = j;
+                            }
+                        }
+                        targetIndex = maxIndexInA + 1;
+                    }
+                    
+                    const costA = targetIndex < a.length / 2 ? targetIndex : targetIndex - a.length;
+                    const costB = i < b.length / 2 ? i : i - b.length;
+
+                    const cost = Math.abs(costA) + Math.abs(costB);
+
+                    if (cost < bestCost) {
+                        bestCost = cost;
+                        bestMoves = [costA, costB];
+                    }
                 }
-                const mid = Math.floor(b.length / 2);
-                if (maxIndex <= mid) {
-                    for (let i = 0; i < maxIndex; i++) { b.push(b.shift()); moves.push('rb'); }
-                } else {
-                    for (let i = 0; i < b.length - maxIndex; i++) { b.unshift(b.pop()); moves.push('rrb'); }
-                }
-                a.unshift(b.shift());
+                
+                let [rotA, rotB] = bestMoves;
+                while (rotA > 0 && rotB > 0) { moves.push('rr'); rotA--; rotB--; }
+                while (rotA < 0 && rotB < 0) { moves.push('rrr'); rotA++; rotB++; }
+                while (rotA > 0) { moves.push('ra'); rotA--; }
+                while (rotA < 0) { moves.push('rra'); rotA++; }
+                while (rotB > 0) { moves.push('rb'); rotB--; }
+                while (rotB < 0) { moves.push('rrb'); rotB++; }
                 moves.push('pa');
+                
+                const tempB = [...b];
+                const tempA = [...a];
+                bestMoves[1] < 0 ? 
+                    (() => { for(let i=0; i < -bestMoves[1]; i++) tempB.unshift(tempB.pop()) })() : 
+                    (() => { for(let i=0; i < bestMoves[1]; i++) tempB.push(tempB.shift()) })();
+                tempA.unshift(tempB.shift());
+                bestMoves[0] < 0 ?
+                    (() => { for(let i=0; i < -bestMoves[0]; i++) tempA.unshift(tempA.pop()) })() :
+                    (() => { for(let i=0; i < bestMoves[0]; i++) tempA.push(tempA.shift()) })();
+
+                a = tempA;
+                b = tempB;
             }
+
+            let minIndex = 0;
+            for(let i=1; i<a.length; i++) {
+                if(a[i] < a[minIndex]) minIndex = i;
+            }
+            if (minIndex < a.length / 2) {
+                for (let i = 0; i < minIndex; i++) moves.push('ra');
+            } else {
+                for (let i = 0; i < a.length - minIndex; i++) moves.push('rra');
+            }
+
             return moves;
         }
+
 
         function solveForUser() {
             const numbersStr = numbersInput.value.trim();
@@ -446,6 +524,7 @@
             updatePlayButtonUI();
         }
 
+        // --- Écouteurs d'événements ---
         generateBtn.addEventListener('click', () => {
             generateNumbers(parseInt(numberCountSlider.value, 10));
         });
@@ -506,6 +585,7 @@
         
         closeModalButton.addEventListener('click', hideError);
         
+        // --- Initialisation ---
         const initialSpeed = 1050 - parseInt(speedSlider.value, 10);
         state.animationSpeed = initialSpeed;
         speedValue.textContent = `${initialSpeed}ms`;
