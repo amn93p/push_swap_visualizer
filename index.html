@@ -232,8 +232,11 @@
 
             if (isSorted(initialNumbers)) return [];
 
+            // Map values to their sorted indices (0 to n-1)
             const sortedUnique = [...new Set(initialNumbers)].sort((a, b) => a - b);
-            let a = initialNumbers.map(val => sortedUnique.indexOf(val));
+            const indexMap = new Map(sortedUnique.map((val, i) => [val, i]));
+            
+            let a = initialNumbers.map(val => indexMap.get(val));
             let b = [];
             let moves = [];
             
@@ -243,9 +246,10 @@
                 maxBits++;
             }
 
-            // Radix sort
+            // Radix sort implementation
             for (let i = 0; i < maxBits; i++) {
-                for (let j = 0; j < size; j++) {
+                const lenA = a.length;
+                for (let j = 0; j < lenA; j++) {
                     const num = a[0];
                     if (((num >> i) & 1) === 1) {
                         moves.push('ra');
