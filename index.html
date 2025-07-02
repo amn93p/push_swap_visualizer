@@ -88,11 +88,9 @@
         <!-- Section de visualisation (initialement cachée) -->
         <div id="vizSection" class="section-transition opacity-0 transform translate-y-4 max-h-0 overflow-hidden">
             <!-- Barre d'actions et d'informations -->
-            <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <button id="playPauseButton" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 shadow-md w-28">
-                        Pause
-                    </button>
+                    <button id="playPauseButton" class="text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 shadow-md w-32"></button>
                     <button id="resetButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 shadow-md">
                         Reconfigurer
                     </button>
@@ -107,10 +105,15 @@
                 </div>
             </div>
 
+            <!-- Affichage de l'opération en cours -->
+            <div class="text-center mb-4 h-8">
+                <span class="font-mono text-2xl text-yellow-400 transition-opacity duration-300" id="currentMoveDisplay">&nbsp;</span>
+            </div>
+
             <!-- Piles -->
             <main class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px]">
-                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col-reverse items-center gap-2 flex-grow justify-end p-2"></div></div>
-                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col-reverse items-center gap-2 flex-grow justify-end p-2"></div></div>
+                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col items-center gap-2 flex-grow justify-end p-2"></div></div>
+                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col items-center gap-2 flex-grow justify-end p-2"></div></div>
             </main>
         </div>
 
@@ -138,6 +141,7 @@
         const errorMessage = document.getElementById('errorMessage');
         const closeModalButton = document.getElementById('closeModalButton');
         const subtitle = document.getElementById('subtitle');
+        const currentMoveDisplay = document.getElementById('currentMoveDisplay');
 
         // --- État de l'application ---
         let state = {
@@ -168,11 +172,11 @@
             setupSection.classList.remove('opacity-0', 'transform', '-translate-y-4', 'max-h-0');
             subtitle.textContent = "Un outil interactif pour visualiser vos algorithmes de tri.";
             startVizButton.disabled = true;
+            currentMoveDisplay.innerHTML = '&nbsp;';
         }
 
         function generateNumbers(count) {
             const numbers = new Set();
-            // Génère des nombres aléatoires entre -999 et 999
             while (numbers.size < count) {
                 numbers.add(Math.floor(Math.random() * 2000) - 1000);
             }
@@ -184,6 +188,23 @@
             const numbersOk = numbersInput.value.trim() !== '';
             const movesOk = movesInput.value.trim() !== '';
             startVizButton.disabled = !(numbersOk && movesOk);
+        }
+
+        function updatePlayButtonUI() {
+            const baseClasses = "text-white font-bold py-2 px-5 rounded-lg transition-all transform hover:scale-105 shadow-md w-32";
+            if (state.currentMoveIndex >= state.totalMoves) {
+                playPauseButton.textContent = 'Terminé';
+                playPauseButton.disabled = true;
+                playPauseButton.className = `${baseClasses} bg-gray-500 cursor-not-allowed`;
+            } else if (state.isPlaying) {
+                playPauseButton.textContent = 'Pause';
+                playPauseButton.disabled = false;
+                playPauseButton.className = `${baseClasses} bg-yellow-500 hover:bg-yellow-600`;
+            } else { // Paused
+                playPauseButton.textContent = 'Reprendre';
+                playPauseButton.disabled = false;
+                playPauseButton.className = `${baseClasses} bg-green-500 hover:bg-green-600`;
+            }
         }
 
         // --- Fonctions de visualisation ---
@@ -202,7 +223,7 @@
             
             const movesStr = movesInput.value.trim();
             if (!movesStr) { showError("Veuillez fournir les instructions de tri."); return false; }
-            state.moves = movesStr.split(/\s+/);
+            state.moves = movesStr.split(/\s+/).filter(m => m.length > 0);
             state.totalMoves = state.moves.length;
             state.currentMoveIndex = 0;
             
@@ -295,11 +316,10 @@
         function nextStep() {
             if (state.currentMoveIndex >= state.totalMoves) {
                 pauseVisualization();
-                playPauseButton.disabled = true;
-                playPauseButton.textContent = "Terminé";
                 return;
             }
             const move = state.moves[state.currentMoveIndex];
+            currentMoveDisplay.textContent = move;
             executeMove(move);
             state.currentMoveIndex++;
             renderStacks();
@@ -308,20 +328,14 @@
         function playVisualization() {
             if (state.currentMoveIndex >= state.totalMoves) return;
             state.isPlaying = true;
-            playPauseButton.textContent = 'Pause';
-            playPauseButton.classList.replace('bg-green-500', 'bg-yellow-500');
-            playPauseButton.classList.replace('hover:bg-green-600', 'hover:bg-yellow-600');
+            updatePlayButtonUI();
             state.intervalId = setInterval(nextStep, state.animationSpeed);
         }
 
         function pauseVisualization() {
             clearInterval(state.intervalId);
             state.isPlaying = false;
-            if (state.currentMoveIndex < state.totalMoves) {
-                playPauseButton.textContent = 'Reprendre';
-                playPauseButton.classList.replace('bg-yellow-500', 'bg-green-500');
-                playPauseButton.classList.replace('hover:bg-yellow-600', 'hover:bg-green-600');
-            }
+            updatePlayButtonUI();
         }
 
         // --- Écouteurs d'événements ---
@@ -355,8 +369,6 @@
             state = { ...state, initialStack: [], moves: [], stackA: [], stackB: [], currentMoveIndex: 0, totalMoves: 0, isPlaying: false };
             stackAContainer.innerHTML = '';
             stackBContainer.innerHTML = '';
-            playPauseButton.disabled = false;
-            playPauseButton.textContent = "Pause";
             switchToSetupView();
         });
 
@@ -372,7 +384,7 @@
         
         // --- Initialisation ---
         state.animationSpeed = 1050 - speedSlider.value;
-        switchToSetupView(); // Commence en mode configuration
+        switchToSetupView();
     });
     </script>
 </body>
