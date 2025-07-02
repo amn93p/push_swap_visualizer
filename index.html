@@ -221,7 +221,7 @@
             validateInputsForButton();
         }
         
-        // --- NOUVEL ALGORITHME DE RÉSOLUTION OPTIMISÉ ---
+        // --- NOUVEL ALGORITHME DE RÉSOLUTION OPTIMISÉ (RADIX SORT) ---
         function solvePushSwap(initialNumbers) {
             const isSorted = (stack) => {
                 for (let i = 0; i < stack.length - 1; i++) {
@@ -232,110 +232,34 @@
 
             if (isSorted(initialNumbers)) return [];
 
-            let a = [...initialNumbers];
+            const sortedUnique = [...new Set(initialNumbers)].sort((a, b) => a - b);
+            let a = initialNumbers.map(val => sortedUnique.indexOf(val));
             let b = [];
             let moves = [];
-
-            // Gérer les cas simples de manière optimale
-            if (a.length === 2) return ['sa'];
-            if (a.length === 3) {
-                const [n1, n2, n3] = a;
-                if (n1 > n2 && n2 < n3 && n1 < n3) return ['sa'];
-                if (n1 > n2 && n2 > n3 && n1 > n3) return ['sa', 'rra'];
-                if (n1 > n2 && n2 < n3 && n1 > n3) return ['ra'];
-                if (n1 < n2 && n2 > n3 && n1 < n3) return ['sa', 'ra'];
-                if (n1 < n2 && n2 > n3 && n1 > n3) return ['rra'];
-                return [];
-            }
             
-            // Pousser tous les éléments sauf 3 vers B
-            while (a.length > 3) {
-                moves.push('pb');
-                b.push(a.shift());
+            const size = a.length;
+            let maxBits = 0;
+            while (((size - 1) >> maxBits) !== 0) {
+                maxBits++;
             }
 
-            // Trier les 3 derniers éléments dans A
-            const lastThreeMoves = solvePushSwap(a);
-            moves.push(...lastThreeMoves);
-            lastThreeMoves.forEach(move => {
-                switch (move) {
-                    case 'sa': [a[0], a[1]] = [a[1], a[0]]; break;
-                    case 'ra': a.push(a.shift()); break;
-                    case 'rra': a.unshift(a.pop()); break;
-                }
-            });
-
-            // Insérer les éléments de B dans A au bon endroit
-            while (b.length > 0) {
-                let bestCost = Infinity;
-                let bestMovesInfo = {};
-
-                // Pour chaque élément dans B, calculer le coût pour le déplacer vers A
-                for (let i = 0; i < b.length; i++) {
-                    const numToPush = b[i];
-                    
-                    // Trouver la position cible dans A
-                    let targetIndexA = -1;
-                    let minLarger = Infinity;
-                    for (let j = 0; j < a.length; j++) {
-                        if (a[j] > numToPush && a[j] < minLarger) {
-                            minLarger = a[j];
-                            targetIndexA = j;
-                        }
-                    }
-                    if (targetIndexA === -1) {
-                        let minInA = Infinity;
-                        for(let j=0; j<a.length; j++) {
-                            if (a[j] < minInA) {
-                                minInA = a[j];
-                                targetIndexA = j;
-                            }
-                        }
-                    }
-                    
-                    // Calculer les coûts de rotation
-                    const costA = targetIndexA < a.length / 2 ? targetIndexA : targetIndexA - a.length;
-                    const costB = i < b.length / 2 ? i : i - b.length;
-                    
-                    let totalCost;
-                    if (Math.sign(costA) === Math.sign(costB)) {
-                        totalCost = Math.max(Math.abs(costA), Math.abs(costB));
+            // Radix sort
+            for (let i = 0; i < maxBits; i++) {
+                for (let j = 0; j < size; j++) {
+                    const num = a[0];
+                    if (((num >> i) & 1) === 1) {
+                        moves.push('ra');
+                        a.push(a.shift());
                     } else {
-                        totalCost = Math.abs(costA) + Math.abs(costB);
-                    }
-
-                    if (totalCost < bestCost) {
-                        bestCost = totalCost;
-                        bestMovesInfo = { rotA: costA, rotB: costB };
+                        moves.push('pb');
+                        b.push(a.shift());
                     }
                 }
-                
-                // Exécuter les mouvements les moins chers
-                let { rotA, rotB } = bestMovesInfo;
-                while (rotA > 0 && rotB > 0) { moves.push('rr'); a.push(a.shift()); b.push(b.shift()); rotA--; rotB--; }
-                while (rotA < 0 && rotB < 0) { moves.push('rrr'); a.unshift(a.pop()); b.unshift(b.pop()); rotA++; rotB++; }
-                while (rotA > 0) { moves.push('ra'); a.push(a.shift()); rotA--; }
-                while (rotA < 0) { moves.push('rra'); a.unshift(a.pop()); rotA++; }
-                while (rotB > 0) { moves.push('rb'); b.push(b.shift()); rotB--; }
-                while (rotB < 0) { moves.push('rrb'); b.unshift(b.pop()); rotB++; }
-                
-                moves.push('pa');
-                a.unshift(b.shift());
-            }
-
-            // Rotation finale de A pour mettre le min en haut
-            let minIndex = 0;
-            for(let i=1; i<a.length; i++) {
-                if(a[i] < a[minIndex]) minIndex = i;
-            }
-            if (minIndex !== 0) {
-                if (minIndex <= a.length / 2) {
-                    for (let i = 0; i < minIndex; i++) moves.push('ra');
-                } else {
-                    for (let i = 0; i < a.length - minIndex; i++) moves.push('rra');
+                while (b.length > 0) {
+                    moves.push('pa');
+                    a.unshift(b.shift());
                 }
             }
-
             return moves;
         }
 
