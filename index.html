@@ -17,7 +17,6 @@
             background-color: #111827; /* gray-900 */
             color: #F9FAFB; /* gray-50 */
             overflow-x: hidden;
-            user-select:none;
         }
 
         .section-transition {
@@ -85,7 +84,7 @@
         <p class="text-cyan-400 mt-4 text-lg animate-pulse">Visualizer</p>
     </div>
 
-    <div class="w-full max-w-7xl mx-auto">
+    <div id="mainApp" class="w-full max-w-7xl mx-auto opacity-0 transition-opacity duration-1000">
         
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
@@ -148,12 +147,15 @@
 
     </div>
     
+    <!-- Modale pour les messages d'erreur -->
     <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm w-full"><h3 class="text-xl font-bold text-red-500 mb-4">Erreur</h3><p id="errorMessage" class="text-gray-300 mb-6"></p><button id="closeModalButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Fermer</button></div></div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- Références aux éléments du DOM ---
         const loader = document.getElementById('loader');
+        const mainApp = document.getElementById('mainApp');
         const setupSection = document.getElementById('setupSection');
         const vizSection = document.getElementById('vizSection');
         const numbersInput = document.getElementById('numbersInput');
@@ -178,7 +180,6 @@
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
         };
         
-
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -277,7 +278,7 @@
             
             block.textContent = num;
             block.dataset.value = num;
-            block.className = 'number-block flex items-center justify-center h-10 rounded-md font-semibold text-white-900 shadow-lg border-t border-white/20';
+            block.className = 'number-block flex items-center justify-center h-10 rounded-md font-semibold text-gray-900 shadow-lg border-t border-white/20';
             block.style.width = `${widthPercent}%`;
             block.style.background = `linear-gradient(to top, hsl(${hue}, 70%, 55%), hsl(${hue}, 80%, 65%))`;
             return block;
@@ -434,8 +435,9 @@
         
         setTimeout(() => {
             loader.classList.add('opacity-0');
+            mainApp.classList.remove('opacity-0');
             setTimeout(() => loader.style.display = 'none', 1000);
-        }, 2000); 
+        }, 1500);
 
         const initialSpeed = 1050 - parseInt(speedSlider.value, 10);
         state.animationSpeed = initialSpeed;
