@@ -43,23 +43,6 @@
             background: #6B7280; /* gray-500 */
         }
         
-        @keyframes fadeInRise {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .loader-char {
-            display: inline-block;
-            opacity: 0;
-            animation: fadeInRise 0.5s forwards;
-            animation-delay: var(--delay);
-        }
-        
         @keyframes finalMessage {
             from {
                 opacity: 0;
@@ -77,14 +60,7 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
-    <div id="loader" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-50 transition-opacity duration-1000 ease-in-out">
-        <div class="text-4xl sm:text-5xl font-bold text-white tracking-tight">
-            <span class="loader-char" style="--delay: 0.1s;">P</span><span class="loader-char" style="--delay: 0.2s;">u</span><span class="loader-char" style="--delay: 0.3s;">s</span><span class="loader-char" style="--delay: 0.4s;">h</span><span class="loader-char" style="--delay: 0.5s;">&nbsp;</span><span class="loader-char" style="--delay: 0.6s;">S</span><span class="loader-char" style="--delay: 0.7s;">w</span><span class="loader-char" style="--delay: 0.8s;">a</span><span class="loader-char" style="--delay: 0.9s;">p</span>
-        </div>
-        <p class="text-cyan-400 mt-4 text-lg animate-pulse">Visualizer</p>
-    </div>
-
-    <div id="mainApp" class="w-full max-w-7xl mx-auto opacity-0 transition-opacity duration-1000">
+    <div id="mainApp" class="w-full max-w-7xl mx-auto">
         
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
@@ -95,7 +71,8 @@
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6 border border-gray-700">
                 <div>
                     <h2 class="text-xl font-bold mb-3 text-gray-200">1. Pile de départ</h2>
-                    <div class="flex justify-center gap-3 mb-4">
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <button id="demoBtn" class="gen-btn bg-purple-600 hover:bg-purple-700">Mode Démo</button>
                         <button class="gen-btn" data-count="5">5 Nombres</button>
                         <button class="gen-btn" data-count="10">10 Nombres</button>
                         <button class="gen-btn" data-count="100">100 Nombres</button>
@@ -147,15 +124,11 @@
 
     </div>
     
-    <!-- Modale pour les messages d'erreur -->
     <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm w-full"><h3 class="text-xl font-bold text-red-500 mb-4">Erreur</h3><p id="errorMessage" class="text-gray-300 mb-6"></p><button id="closeModalButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Fermer</button></div></div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Références aux éléments du DOM ---
-        const loader = document.getElementById('loader');
-        const mainApp = document.getElementById('mainApp');
         const setupSection = document.getElementById('setupSection');
         const vizSection = document.getElementById('vizSection');
         const numbersInput = document.getElementById('numbersInput');
@@ -173,13 +146,17 @@
         const closeModalButton = document.getElementById('closeModalButton');
         const subtitle = document.getElementById('subtitle');
         const currentMoveDisplay = document.getElementById('currentMoveDisplay');
+        const demoBtn = document.getElementById('demoBtn');
 
+        // --- État de l'application ---
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 550,
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
         };
         
+        // --- Fonctions de l'interface utilisateur ---
+
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -208,6 +185,12 @@
                 numbers.add(Math.floor(Math.random() * 2000) - 1000);
             }
             numbersInput.value = Array.from(numbers).join(' ');
+            validateInputsForButton();
+        }
+        
+        function loadDemo() {
+            numbersInput.value = '3 1 2';
+            movesInput.value = 'sa rra sa';
             validateInputsForButton();
         }
 
@@ -239,6 +222,7 @@
             }
         }
 
+        // --- Fonctions de visualisation ---
 
         function parseAndValidate() {
             const numbersStr = numbersInput.value.trim();
@@ -392,6 +376,9 @@
             btn.className = 'bg-gray-700 hover:bg-cyan-800 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95';
             btn.addEventListener('click', () => generateNumbers(parseInt(btn.dataset.count)));
         });
+        
+        demoBtn.className = 'bg-purple-600 hover:bg-purple-700 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95';
+        demoBtn.addEventListener('click', loadDemo);
 
         [numbersInput, movesInput].forEach(input => {
             input.addEventListener('input', validateInputsForButton);
@@ -433,12 +420,6 @@
         
         closeModalButton.addEventListener('click', hideError);
         
-        setTimeout(() => {
-            loader.classList.add('opacity-0');
-            mainApp.classList.remove('opacity-0');
-            setTimeout(() => loader.style.display = 'none', 1000);
-        }, 1500);
-
         const initialSpeed = 1050 - parseInt(speedSlider.value, 10);
         state.animationSpeed = initialSpeed;
         speedValue.textContent = `${initialSpeed}ms`;
