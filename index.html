@@ -71,7 +71,7 @@
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6 border border-gray-700">
                 <div>
                     <h2 class="text-xl font-bold mb-3 text-gray-200">1. Pile de départ</h2>
-                    <div class="flex justify-center gap-3 mb-4">
+                    <div class="flex flex-wrap gap-3 mb-4">
                         <button id="demoBtn" class="gen-btn bg-purple-600 hover:bg-purple-700">Mode Démo</button>
                         <button class="gen-btn" data-count="5">5 Nombres</button>
                         <button class="gen-btn" data-count="10">10 Nombres</button>
@@ -148,14 +148,12 @@
         const currentMoveDisplay = document.getElementById('currentMoveDisplay');
         const demoBtn = document.getElementById('demoBtn');
 
-        // --- État de l'application ---
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 550,
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
         };
         
-        // --- Fonctions de l'interface utilisateur ---
 
         function showError(message) {
             errorMessage.textContent = message;
@@ -187,10 +185,60 @@
             numbersInput.value = Array.from(numbers).join(' ');
             validateInputsForButton();
         }
-        
+
+        function solvePushSwap(initialNumbers) {
+            let a = [...initialNumbers];
+            let b = [];
+            let moves = [];
+            
+            const initialLength = a.length;
+            for (let i = 0; i < initialLength; i++) {
+                moves.push('pb');
+            }
+            b = [...a].reverse();
+            a = [];
+
+            while (b.length > 0) {
+                let max = -Infinity;
+                let maxIndex = -1;
+
+                for (let i = 0; i < b.length; i++) {
+                    if (b[i] > max) {
+                        max = b[i];
+                        maxIndex = i;
+                    }
+                }
+
+                const mid = Math.floor(b.length / 2);
+                if (maxIndex <= mid) {
+                    for (let i = 0; i < maxIndex; i++) {
+                        b.push(b.shift());
+                        moves.push('rb');
+                    }
+                } else {
+                    for (let i = 0; i < b.length - maxIndex; i++) {
+                        b.unshift(b.pop());
+                        moves.push('rrb');
+                    }
+                }
+
+                a.unshift(b.shift());
+                moves.push('pa');
+            }
+            return moves;
+        }
+
         function loadDemo() {
-            numbersInput.value = '3 1 2';
-            movesInput.value = 'sa rra sa';
+            const numbers = new Set();
+            while (numbers.size < 5) {
+                numbers.add(Math.floor(Math.random() * 100));
+            }
+            const demoList = Array.from(numbers);
+            numbersInput.value = demoList.join(' ');
+
+            const demoMoves = solvePushSwap(demoList);
+            movesInput.value = demoMoves.join(' ');
+
             validateInputsForButton();
         }
 
@@ -221,8 +269,6 @@
                 playPauseButton.className = `${baseClasses} bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800`;
             }
         }
-
-        // --- Fonctions de visualisation ---
 
         function parseAndValidate() {
             const numbersStr = numbersInput.value.trim();
