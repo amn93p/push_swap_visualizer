@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Swap Visualizer | 42</title>
     
+    <!-- Importation de Tailwind CSS pour le style -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Importation de la police Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Style de base pour un thème sombre et une police moderne */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111827; /* gray-900 */
@@ -19,15 +22,18 @@
             overflow-x: hidden;
         }
 
+        /* Transitions fluides pour les sections */
         .section-transition {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, max-height 0.7s ease-in-out;
         }
 
+        /* Style pour les blocs représentant les nombres */
         .number-block {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
             will-change: transform;
         }
         
+        /* Style pour la barre de défilement */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -46,13 +52,16 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
+    <!-- Conteneur principal de l'application -->
     <div class="w-full max-w-7xl mx-auto">
         
+        <!-- En-tête -->
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
             <p id="subtitle" class="text-gray-400 mt-2">Un outil interactif pour visualiser vos algorithmes de tri.</p>
         </header>
 
+        <!-- Section de configuration (initialement visible) -->
         <div id="setupSection" class="section-transition w-full max-w-4xl mx-auto">
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6">
                 <div>
@@ -76,7 +85,9 @@
             </div>
         </div>
 
+        <!-- Section de visualisation (initialement cachée) -->
         <div id="vizSection" class="section-transition opacity-0 transform translate-y-4 max-h-0 overflow-hidden">
+            <!-- Barre d'actions et d'informations -->
             <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <button id="playPauseButton" class="text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 shadow-md w-32"></button>
@@ -94,23 +105,27 @@
                 </div>
             </div>
 
+            <!-- Affichage de l'opération en cours -->
             <div class="text-center mb-4 h-8">
                 <span class="font-mono text-2xl text-yellow-400 transition-opacity duration-300" id="currentMoveDisplay">&nbsp;</span>
             </div>
 
+            <!-- Piles -->
             <main class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px]">
-                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col items-center gap-2 flex-grow justify-end p-2"></div></div>
-                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col items-center gap-2 flex-grow justify-end p-2"></div></div>
+                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
+                <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
             </main>
         </div>
 
     </div>
     
+    <!-- Modale pour les messages d'erreur -->
     <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm w-full"><h3 class="text-xl font-bold text-red-500 mb-4">Erreur</h3><p id="errorMessage" class="text-gray-300 mb-6"></p><button id="closeModalButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Fermer</button></div></div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- Références aux éléments du DOM ---
         const setupSection = document.getElementById('setupSection');
         const vizSection = document.getElementById('vizSection');
         const numbersInput = document.getElementById('numbersInput');
@@ -128,12 +143,15 @@
         const subtitle = document.getElementById('subtitle');
         const currentMoveDisplay = document.getElementById('currentMoveDisplay');
 
+        // --- État de l'application ---
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 500,
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
         };
         
+        // --- Fonctions de l'interface utilisateur ---
+
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -153,7 +171,6 @@
             vizSection.classList.add('opacity-0', 'transform', 'translate-y-4', 'max-h-0', 'overflow-hidden');
             setupSection.classList.remove('opacity-0', 'transform', '-translate-y-4', 'max-h-0');
             subtitle.textContent = "Un outil interactif pour visualiser vos algorithmes de tri.";
-            startVizButton.disabled = true;
             currentMoveDisplay.innerHTML = '&nbsp;';
         }
 
@@ -174,20 +191,23 @@
 
         function updatePlayButtonUI() {
             const baseClasses = "text-white font-bold py-2 px-5 rounded-lg transition-all transform hover:scale-105 shadow-md w-32";
-            if (state.currentMoveIndex >= state.totalMoves) {
-                playPauseButton.textContent = 'Terminé';
-                playPauseButton.disabled = true;
-                playPauseButton.className = `${baseClasses} bg-gray-500 cursor-not-allowed`;
+            // Si la visualisation est terminée (et qu'elle a bien eu lieu)
+            if (state.currentMoveIndex >= state.totalMoves && state.totalMoves > 0) {
+                playPauseButton.textContent = 'Rejouer';
+                playPauseButton.disabled = false;
+                playPauseButton.className = `${baseClasses} bg-blue-600 hover:bg-blue-700`;
             } else if (state.isPlaying) {
                 playPauseButton.textContent = 'Pause';
                 playPauseButton.disabled = false;
                 playPauseButton.className = `${baseClasses} bg-yellow-500 hover:bg-yellow-600`;
-            } else { // Paused
+            } else { // En pause ou prêt à reprendre
                 playPauseButton.textContent = 'Reprendre';
                 playPauseButton.disabled = false;
                 playPauseButton.className = `${baseClasses} bg-green-500 hover:bg-green-600`;
             }
         }
+
+        // --- Fonctions de visualisation ---
 
         function parseAndValidate() {
             const numbersStr = numbersInput.value.trim();
@@ -296,6 +316,7 @@
         function nextStep() {
             if (state.currentMoveIndex >= state.totalMoves) {
                 pauseVisualization();
+                currentMoveDisplay.textContent = 'Terminé !';
                 return;
             }
             const move = state.moves[state.currentMoveIndex];
@@ -318,6 +339,7 @@
             updatePlayButtonUI();
         }
 
+        // --- Écouteurs d'événements ---
         document.querySelectorAll('.gen-btn').forEach(btn => {
             btn.className = 'bg-gray-700 hover:bg-cyan-800 text-gray-200 font-semibold py-2 px-4 rounded-lg transition';
             btn.addEventListener('click', () => generateNumbers(parseInt(btn.dataset.count)));
@@ -336,7 +358,15 @@
         });
 
         playPauseButton.addEventListener('click', () => {
-            if (state.isPlaying) {
+            // Cas "Rejouer"
+            if (state.currentMoveIndex >= state.totalMoves && state.totalMoves > 0) {
+                state.currentMoveIndex = 0;
+                state.stackA = [...state.initialStack];
+                state.stackB = [];
+                currentMoveDisplay.innerHTML = '&nbsp;';
+                renderStacks();
+                setTimeout(playVisualization, 200); // Petit délai pour la fluidité
+            } else if (state.isPlaying) {
                 pauseVisualization();
             } else {
                 playVisualization();
@@ -345,12 +375,11 @@
 
         resetButton.addEventListener('click', () => {
             pauseVisualization();
-            state = { ...state, initialStack: [], moves: [], stackA: [], stackB: [], currentMoveIndex: 0, totalMoves: 0, isPlaying: false };
-            stackAContainer.innerHTML = '';
-            stackBContainer.innerHTML = '';
             switchToSetupView();
+            validateInputsForButton(); // Ré-évalue l'état du bouton
         });
 
+        // Met à jour la vitesse de l'animation et redémarre l'intervalle si en cours de lecture
         speedSlider.addEventListener('input', (e) => {
             state.animationSpeed = 1050 - e.target.value;
             if (state.isPlaying) {
