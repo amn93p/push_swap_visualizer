@@ -221,7 +221,7 @@
             validateInputsForButton();
         }
         
-        // --- NOUVEL ALGORITHME DE RÉSOLUTION OPTIMISÉ (RADIX SORT) ---
+        // --- NOUVEL ALGORITHME DE RÉSOLUTION FIABLE ---
         function solvePushSwap(initialNumbers) {
             const isSorted = (stack) => {
                 for (let i = 0; i < stack.length - 1; i++) {
@@ -231,14 +231,53 @@
             };
 
             if (isSorted(initialNumbers)) return [];
+            
+            let moves = [];
+            let a = [...initialNumbers];
+            let b = [];
 
-            // Map values to their sorted indices (0 to n-1)
+            const sortThree = () => {
+                const max = Math.max(...a);
+                if (a[0] === max) moves.push('ra');
+                else if (a[1] === max) moves.push('rra');
+                if (a[0] > a[1]) moves.push('sa');
+            };
+
+            const sortFive = () => {
+                 while (b.length < 2) {
+                    const min = Math.min(...a);
+                    let minIndex = a.indexOf(min);
+                    while(a[0] !== min) {
+                         if (minIndex <= 2) moves.push('ra');
+                         else moves.push('rra');
+                         // Simulate rotation
+                         if (minIndex <= 2) a.push(a.shift());
+                         else a.unshift(a.pop());
+                    }
+                    moves.push('pb');
+                    b.push(a.shift());
+                 }
+                 sortThree();
+                 moves.push('pa');
+                 moves.push('pa');
+            };
+
+            if (a.length <= 5) {
+                if (a.length === 2) {
+                    moves.push('sa');
+                } else if (a.length === 3) {
+                    sortThree();
+                } else if (a.length <= 5) {
+                    sortFive();
+                }
+                return moves;
+            }
+
+            // Radix sort for larger lists
             const sortedUnique = [...new Set(initialNumbers)].sort((a, b) => a - b);
             const indexMap = new Map(sortedUnique.map((val, i) => [val, i]));
             
-            let a = initialNumbers.map(val => indexMap.get(val));
-            let b = [];
-            let moves = [];
+            a = initialNumbers.map(val => indexMap.get(val));
             
             const size = a.length;
             let maxBits = 0;
@@ -246,7 +285,6 @@
                 maxBits++;
             }
 
-            // Radix sort implementation
             for (let i = 0; i < maxBits; i++) {
                 const lenA = a.length;
                 for (let j = 0; j < lenA; j++) {
