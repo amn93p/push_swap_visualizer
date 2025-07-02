@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Swap Visualizer | 42</title>
     
+    <!-- Importation de Tailwind CSS pour le style -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Importation de la police Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,19 +62,22 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
+    <!-- Conteneur principal de l'application -->
     <div id="mainApp" class="w-full max-w-7xl mx-auto">
         
+        <!-- En-tête -->
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
             <p id="subtitle" class="text-gray-400 mt-2">Un outil interactif pour visualiser vos algorithmes de tri.</p>
         </header>
 
+        <!-- Section de configuration (initialement visible) -->
         <div id="setupSection" class="section-transition w-full max-w-4xl mx-auto">
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6 border border-gray-700">
                 <div>
                     <h2 class="text-xl font-bold mb-3 text-gray-200">1. Pile de départ</h2>
                     <div class="flex justify-center gap-3 mb-4">
-                        <button id="demoBtn" class="gen-btn bg-purple-600 hover:bg-purple-700">Mode Démo</button>
+                        <button id="solveBtn" class="gen-btn bg-purple-600 hover:bg-purple-700">Résoudre</button>
                         <button class="gen-btn" data-count="5">5 Nombres</button>
                         <button class="gen-btn" data-count="10">10 Nombres</button>
                         <button class="gen-btn" data-count="100">100 Nombres</button>
@@ -90,6 +95,14 @@
                         <span id="speedValue" class="text-sm font-mono text-cyan-400 w-20 text-center bg-gray-700 rounded-md py-1">550ms</span>
                     </div>
                 </div>
+                <div>
+                    <h2 class="text-xl font-bold mb-3 text-gray-200">4. Limite d'opérations (Optionnel)</h2>
+                    <div class="flex items-center gap-4 bg-gray-900 p-3 rounded-lg">
+                        <input type="checkbox" id="limitMovesCheckbox" class="h-6 w-6 rounded bg-gray-700 border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer">
+                        <label for="limitMovesCheckbox" class="text-gray-300 select-none cursor-pointer">Activer la limite</label>
+                        <input type="number" id="maxMovesInput" class="w-full bg-gray-700 rounded-lg p-2 text-gray-200 border border-gray-600 focus:ring-2 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nombre max d'opérations" disabled>
+                    </div>
+                </div>
             </div>
             <div class="text-center mt-6">
                  <button id="startVizButton" class="bg-gradient-to-br from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg text-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed disabled:scale-100" disabled>
@@ -98,7 +111,9 @@
             </div>
         </div>
 
+        <!-- Section de visualisation (initialement cachée) -->
         <div id="vizSection" class="section-transition opacity-0 transform translate-y-4 max-h-0 overflow-hidden">
+            <!-- Barre d'actions et d'informations -->
             <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-gray-700">
                 <div class="flex items-center gap-3">
                     <button id="playPauseButton" class="text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md w-32"></button>
@@ -138,6 +153,8 @@
         const resetButton = document.getElementById('resetButton');
         const speedSlider = document.getElementById('speedSlider');
         const speedValue = document.getElementById('speedValue');
+        const limitMovesCheckbox = document.getElementById('limitMovesCheckbox');
+        const maxMovesInput = document.getElementById('maxMovesInput');
         const moveCounter = document.getElementById('moveCounter');
         const stackAContainer = document.getElementById('stackA');
         const stackBContainer = document.getElementById('stackB');
@@ -146,15 +163,15 @@
         const closeModalButton = document.getElementById('closeModalButton');
         const subtitle = document.getElementById('subtitle');
         const currentMoveDisplay = document.getElementById('currentMoveDisplay');
-        const demoBtn = document.getElementById('demoBtn');
+        const solveBtn = document.getElementById('solveBtn');
 
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 550,
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
+            isLimitEnabled: false, maxMoves: Infinity,
         };
         
-
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -185,60 +202,48 @@
             numbersInput.value = Array.from(numbers).join(' ');
             validateInputsForButton();
         }
-
+        
         function solvePushSwap(initialNumbers) {
             let a = [...initialNumbers];
             let b = [];
             let moves = [];
-            
             const initialLength = a.length;
             for (let i = 0; i < initialLength; i++) {
                 moves.push('pb');
             }
             b = [...a].reverse();
             a = [];
-
             while (b.length > 0) {
-                let max = -Infinity;
-                let maxIndex = -1;
-
+                let max = -Infinity, maxIndex = -1;
                 for (let i = 0; i < b.length; i++) {
-                    if (b[i] > max) {
-                        max = b[i];
-                        maxIndex = i;
-                    }
+                    if (b[i] > max) { max = b[i]; maxIndex = i; }
                 }
-
                 const mid = Math.floor(b.length / 2);
                 if (maxIndex <= mid) {
-                    for (let i = 0; i < maxIndex; i++) {
-                        b.push(b.shift());
-                        moves.push('rb');
-                    }
+                    for (let i = 0; i < maxIndex; i++) { b.push(b.shift()); moves.push('rb'); }
                 } else {
-                    for (let i = 0; i < b.length - maxIndex; i++) {
-                        b.unshift(b.pop());
-                        moves.push('rrb');
-                    }
+                    for (let i = 0; i < b.length - maxIndex; i++) { b.unshift(b.pop()); moves.push('rrb'); }
                 }
-
                 a.unshift(b.shift());
                 moves.push('pa');
             }
             return moves;
         }
 
-        function loadDemo() {
-            const numbers = new Set();
-            while (numbers.size < 5) {
-                numbers.add(Math.floor(Math.random() * 100));
+        function solveForUser() {
+            const numbersStr = numbersInput.value.trim();
+            if (!numbersStr) {
+                showError("Veuillez entrer une liste de nombres à résoudre.");
+                return;
             }
-            const demoList = Array.from(numbers);
-            numbersInput.value = demoList.join(' ');
-
-            const demoMoves = solvePushSwap(demoList);
-            movesInput.value = demoMoves.join(' ');
-
+            const userNumbers = numbersStr.split(/\s+/).map(n => parseInt(n, 10));
+            if (userNumbers.some(isNaN) || new Set(userNumbers).size !== userNumbers.length) {
+                showError("La liste de nombres est invalide (contient des non-nombres ou des doublons).");
+                return;
+            }
+            
+            const solvedMoves = solvePushSwap(userNumbers);
+            movesInput.value = solvedMoves.join(' ');
             validateInputsForButton();
         }
 
@@ -290,6 +295,18 @@
             
             state.minVal = numbers.length > 0 ? Math.min(...numbers) : 0;
             state.maxVal = numbers.length > 0 ? Math.max(...numbers) : 0;
+
+            state.isLimitEnabled = limitMovesCheckbox.checked;
+            if (state.isLimitEnabled) {
+                const maxMovesVal = parseInt(maxMovesInput.value, 10);
+                if (isNaN(maxMovesVal) || maxMovesVal <= 0) {
+                    showError("Veuillez entrer une limite d'opérations valide (nombre entier positif).");
+                    return false;
+                }
+                state.maxMoves = maxMovesVal;
+            } else {
+                state.maxMoves = Infinity;
+            }
 
             return true;
         }
@@ -383,6 +400,16 @@
         }
         
         function nextStep() {
+            if (state.isLimitEnabled && state.currentMoveIndex >= state.maxMoves) {
+                pauseVisualization();
+                const message = `Échec : Limite (${state.maxMoves}) dépassée ❌`;
+                currentMoveDisplay.textContent = message;
+                currentMoveDisplay.className = 'font-mono text-xl text-red-400 final-message-anim';
+                playPauseButton.textContent = 'Échec';
+                playPauseButton.disabled = true;
+                return;
+            }
+
             if (state.currentMoveIndex >= state.totalMoves) {
                 pauseVisualization();
                 const sorted = isStackSorted();
@@ -423,8 +450,8 @@
             btn.addEventListener('click', () => generateNumbers(parseInt(btn.dataset.count)));
         });
         
-        demoBtn.className = 'bg-purple-600 hover:bg-purple-700 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95';
-        demoBtn.addEventListener('click', loadDemo);
+        solveBtn.className = 'bg-purple-600 hover:bg-purple-700 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95';
+        solveBtn.addEventListener('click', solveForUser);
 
         [numbersInput, movesInput].forEach(input => {
             input.addEventListener('input', validateInputsForButton);
@@ -456,12 +483,22 @@
         resetButton.addEventListener('click', () => {
             pauseVisualization();
             switchToSetupView();
+            limitMovesCheckbox.checked = false;
+            maxMovesInput.disabled = true;
+            maxMovesInput.value = '';
             validateInputsForButton();
         });
 
         speedSlider.addEventListener('input', (e) => {
             state.animationSpeed = 1050 - e.target.value;
             speedValue.textContent = `${state.animationSpeed}ms`;
+        });
+        
+        limitMovesCheckbox.addEventListener('change', () => {
+            maxMovesInput.disabled = !limitMovesCheckbox.checked;
+            if (!limitMovesCheckbox.checked) {
+                maxMovesInput.value = '';
+            }
         });
         
         closeModalButton.addEventListener('click', hideError);
