@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Swap Visualizer | 42</title>
     
+    <!-- Importation de Tailwind CSS pour le style -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Importation de la police Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Style de base pour un thème sombre et une police moderne */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111827; /* gray-900 */
@@ -19,10 +22,12 @@
             overflow-x: hidden;
         }
 
+        /* Transitions fluides pour les sections */
         .section-transition {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, max-height 0.7s ease-in-out;
         }
 
+        /* Style pour les blocs représentant les nombres */
         .number-block {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
             will-change: transform;
@@ -62,13 +67,16 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
+    <!-- Conteneur principal de l'application -->
     <div id="mainApp" class="w-full max-w-7xl mx-auto">
         
+        <!-- En-tête -->
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
             <p id="subtitle" class="text-gray-400 mt-2">Un outil interactif pour visualiser vos algorithmes de tri.</p>
         </header>
 
+        <!-- Section de configuration (initialement visible) -->
         <div id="setupSection" class="section-transition w-full max-w-4xl mx-auto">
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6 border border-gray-700">
                 <div>
@@ -111,7 +119,9 @@
             </div>
         </div>
 
+        <!-- Section de visualisation (initialement cachée) -->
         <div id="vizSection" class="section-transition opacity-0 transform translate-y-4 max-h-0 overflow-hidden">
+            <!-- Barre d'actions et d'informations -->
             <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-gray-700">
                 <div class="flex items-center gap-3">
                     <button id="playPauseButton" class="text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md w-32"></button>
@@ -125,10 +135,12 @@
                 </div>
             </div>
 
+            <!-- Affichage de l'opération en cours -->
             <div class="text-center mb-4 h-8">
                 <span id="currentMoveDisplay" class="font-mono text-2xl text-yellow-400 transition-all duration-300">&nbsp;</span>
             </div>
 
+            <!-- Piles -->
             <main class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px]">
                 <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
                 <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
@@ -137,11 +149,13 @@
 
     </div>
     
+    <!-- Modale pour les messages d'erreur -->
     <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm w-full"><h3 class="text-xl font-bold text-red-500 mb-4">Erreur</h3><p id="errorMessage" class="text-gray-300 mb-6"></p><button id="closeModalButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Fermer</button></div></div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- Références aux éléments du DOM ---
         const setupSection = document.getElementById('setupSection');
         const vizSection = document.getElementById('vizSection');
         const numbersInput = document.getElementById('numbersInput');
@@ -166,6 +180,7 @@
         const numberCountSlider = document.getElementById('numberCountSlider');
         const numberCountValue = document.getElementById('numberCountValue');
 
+        // --- État de l'application ---
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 550,
@@ -173,6 +188,8 @@
             isLimitEnabled: false, maxMoves: Infinity,
         };
         
+        // --- Fonctions de l'interface utilisateur ---
+
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -204,16 +221,23 @@
             validateInputsForButton();
         }
         
+        // --- NOUVEL ALGORITHME DE RÉSOLUTION OPTIMISÉ ---
         function solvePushSwap(initialNumbers) {
+            const isSorted = (stack) => {
+                for (let i = 0; i < stack.length - 1; i++) {
+                    if (stack[i] > stack[i + 1]) return false;
+                }
+                return true;
+            };
+
+            if (isSorted(initialNumbers)) return [];
+
             let a = [...initialNumbers];
             let b = [];
             let moves = [];
 
-            if (a.length <= 1) return [];
-            if (a.length === 2) {
-                if (a[0] > a[1]) return ['sa'];
-                return [];
-            }
+            // Gérer les cas simples de manière optimale
+            if (a.length === 2) return ['sa'];
             if (a.length === 3) {
                 const [n1, n2, n3] = a;
                 if (n1 > n2 && n2 < n3 && n1 < n3) return ['sa'];
@@ -224,85 +248,92 @@
                 return [];
             }
             
+            // Pousser tous les éléments sauf 3 vers B
             while (a.length > 3) {
                 moves.push('pb');
                 b.push(a.shift());
             }
 
+            // Trier les 3 derniers éléments dans A
             const lastThreeMoves = solvePushSwap(a);
             moves.push(...lastThreeMoves);
-            const tempA = [...a];
             lastThreeMoves.forEach(move => {
                 switch (move) {
-                    case 'sa': [tempA[0], tempA[1]] = [tempA[1], tempA[0]]; break;
-                    case 'ra': tempA.push(tempA.shift()); break;
-                    case 'rra': tempA.unshift(tempA.pop()); break;
+                    case 'sa': [a[0], a[1]] = [a[1], a[0]]; break;
+                    case 'ra': a.push(a.shift()); break;
+                    case 'rra': a.unshift(a.pop()); break;
                 }
             });
-            a = tempA;
 
-
+            // Insérer les éléments de B dans A au bon endroit
             while (b.length > 0) {
                 let bestCost = Infinity;
-                let bestMoves = [];
+                let bestMovesInfo = {};
 
+                // Pour chaque élément dans B, calculer le coût pour le déplacer vers A
                 for (let i = 0; i < b.length; i++) {
                     const numToPush = b[i];
                     
-                    let targetIndex = a.findIndex(val => val > numToPush);
-                    if (targetIndex === -1) {
-                        let maxInA = -Infinity, maxIndexInA = -1;
+                    // Trouver la position cible dans A
+                    let targetIndexA = -1;
+                    let minLarger = Infinity;
+                    for (let j = 0; j < a.length; j++) {
+                        if (a[j] > numToPush && a[j] < minLarger) {
+                            minLarger = a[j];
+                            targetIndexA = j;
+                        }
+                    }
+                    if (targetIndexA === -1) {
+                        let minInA = Infinity;
                         for(let j=0; j<a.length; j++) {
-                            if(a[j] > maxInA) {
-                                maxInA = a[j];
-                                maxIndexInA = j;
+                            if (a[j] < minInA) {
+                                minInA = a[j];
+                                targetIndexA = j;
                             }
                         }
-                        targetIndex = maxIndexInA + 1;
                     }
                     
-                    const costA = targetIndex < a.length / 2 ? targetIndex : targetIndex - a.length;
+                    // Calculer les coûts de rotation
+                    const costA = targetIndexA < a.length / 2 ? targetIndexA : targetIndexA - a.length;
                     const costB = i < b.length / 2 ? i : i - b.length;
+                    
+                    let totalCost;
+                    if (Math.sign(costA) === Math.sign(costB)) {
+                        totalCost = Math.max(Math.abs(costA), Math.abs(costB));
+                    } else {
+                        totalCost = Math.abs(costA) + Math.abs(costB);
+                    }
 
-                    const cost = Math.abs(costA) + Math.abs(costB);
-
-                    if (cost < bestCost) {
-                        bestCost = cost;
-                        bestMoves = [costA, costB];
+                    if (totalCost < bestCost) {
+                        bestCost = totalCost;
+                        bestMovesInfo = { rotA: costA, rotB: costB };
                     }
                 }
                 
-                let [rotA, rotB] = bestMoves;
-                while (rotA > 0 && rotB > 0) { moves.push('rr'); rotA--; rotB--; }
-                while (rotA < 0 && rotB < 0) { moves.push('rrr'); rotA++; rotB++; }
-                while (rotA > 0) { moves.push('ra'); rotA--; }
-                while (rotA < 0) { moves.push('rra'); rotA++; }
-                while (rotB > 0) { moves.push('rb'); rotB--; }
-                while (rotB < 0) { moves.push('rrb'); rotB++; }
-                moves.push('pa');
+                // Exécuter les mouvements les moins chers
+                let { rotA, rotB } = bestMovesInfo;
+                while (rotA > 0 && rotB > 0) { moves.push('rr'); a.push(a.shift()); b.push(b.shift()); rotA--; rotB--; }
+                while (rotA < 0 && rotB < 0) { moves.push('rrr'); a.unshift(a.pop()); b.unshift(b.pop()); rotA++; rotB++; }
+                while (rotA > 0) { moves.push('ra'); a.push(a.shift()); rotA--; }
+                while (rotA < 0) { moves.push('rra'); a.unshift(a.pop()); rotA++; }
+                while (rotB > 0) { moves.push('rb'); b.push(b.shift()); rotB--; }
+                while (rotB < 0) { moves.push('rrb'); b.unshift(b.pop()); rotB++; }
                 
-                const tempB = [...b];
-                const tempA = [...a];
-                bestMoves[1] < 0 ? 
-                    (() => { for(let i=0; i < -bestMoves[1]; i++) tempB.unshift(tempB.pop()) })() : 
-                    (() => { for(let i=0; i < bestMoves[1]; i++) tempB.push(tempB.shift()) })();
-                tempA.unshift(tempB.shift());
-                bestMoves[0] < 0 ?
-                    (() => { for(let i=0; i < -bestMoves[0]; i++) tempA.unshift(tempA.pop()) })() :
-                    (() => { for(let i=0; i < bestMoves[0]; i++) tempA.push(tempA.shift()) })();
-
-                a = tempA;
-                b = tempB;
+                moves.push('pa');
+                a.unshift(b.shift());
             }
 
+            // Rotation finale de A pour mettre le min en haut
             let minIndex = 0;
             for(let i=1; i<a.length; i++) {
                 if(a[i] < a[minIndex]) minIndex = i;
             }
-            if (minIndex < a.length / 2) {
-                for (let i = 0; i < minIndex; i++) moves.push('ra');
-            } else {
-                for (let i = 0; i < a.length - minIndex; i++) moves.push('rra');
+            if (minIndex !== 0) {
+                if (minIndex <= a.length / 2) {
+                    for (let i = 0; i < minIndex; i++) moves.push('ra');
+                } else {
+                    for (let i = 0; i < a.length - minIndex; i++) moves.push('rra');
+                }
             }
 
             return moves;
@@ -353,6 +384,8 @@
                 playPauseButton.className = `${baseClasses} bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800`;
             }
         }
+
+        // --- Fonctions de visualisation ---
 
         function parseAndValidate() {
             const numbersStr = numbersInput.value.trim();
