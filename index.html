@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Swap Visualizer | 42</title>
     
-    <!-- Importation de Tailwind CSS pour le style -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Importation de la police Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Style de base pour un thème sombre et une police moderne */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111827; /* gray-900 */
@@ -22,18 +19,15 @@
             overflow-x: hidden;
         }
 
-        /* Transitions fluides pour les sections */
         .section-transition {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, max-height 0.7s ease-in-out;
         }
 
-        /* Style pour les blocs représentant les nombres */
         .number-block {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
             will-change: transform;
         }
         
-        /* Style pour la barre de défilement */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -52,16 +46,13 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
-    <!-- Conteneur principal de l'application -->
     <div class="w-full max-w-7xl mx-auto">
         
-        <!-- En-tête -->
         <header class="text-center mb-6">
             <h1 class="text-4xl sm:text-5xl font-bold text-white tracking-tight">Push Swap <span class="text-cyan-400">Visualizer</span></h1>
             <p id="subtitle" class="text-gray-400 mt-2">Un outil interactif pour visualiser vos algorithmes de tri.</p>
         </header>
 
-        <!-- Section de configuration (initialement visible) -->
         <div id="setupSection" class="section-transition w-full max-w-4xl mx-auto">
             <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-6">
                 <div>
@@ -106,12 +97,10 @@
                 </div>
             </div>
 
-            <!-- Affichage de l'opération en cours -->
             <div class="text-center mb-4 h-8">
                 <span id="currentMoveDisplay" class="font-mono text-2xl text-yellow-400 transition-all duration-300">&nbsp;</span>
             </div>
 
-            <!-- Piles -->
             <main class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px]">
                 <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-cyan-400">Pile A</h2><div id="stackA" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
                 <div class="bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700"><h2 class="text-2xl font-bold text-center mb-4 text-pink-400">Pile B</h2><div id="stackB" class="flex flex-col items-center gap-2 flex-grow justify-start pt-2"></div></div>
@@ -120,13 +109,11 @@
 
     </div>
     
-    <!-- Modale pour les messages d'erreur -->
     <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm w-full"><h3 class="text-xl font-bold text-red-500 mb-4">Erreur</h3><p id="errorMessage" class="text-gray-300 mb-6"></p><button id="closeModalButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Fermer</button></div></div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Références aux éléments du DOM ---
         const setupSection = document.getElementById('setupSection');
         const vizSection = document.getElementById('vizSection');
         const numbersInput = document.getElementById('numbersInput');
@@ -145,15 +132,12 @@
         const subtitle = document.getElementById('subtitle');
         const currentMoveDisplay = document.getElementById('currentMoveDisplay');
 
-        // --- État de l'application ---
         let state = {
             initialStack: [], moves: [], stackA: [], stackB: [],
             currentMoveIndex: 0, totalMoves: 0, animationSpeed: 550,
             isPlaying: false, intervalId: null, minVal: 0, maxVal: 0,
         };
         
-        // --- Fonctions de l'interface utilisateur ---
-
         function showError(message) {
             errorMessage.textContent = message;
             errorModal.classList.remove('hidden');
@@ -212,8 +196,6 @@
                 playPauseButton.className = `${baseClasses} bg-green-500 hover:bg-green-600`;
             }
         }
-
-        // --- Fonctions de visualisation ---
 
         function parseAndValidate() {
             const numbersStr = numbersInput.value.trim();
@@ -360,7 +342,6 @@
             updatePlayButtonUI();
         }
 
-        // --- Écouteurs d'événements ---
         document.querySelectorAll('.gen-btn').forEach(btn => {
             btn.className = 'bg-gray-700 hover:bg-cyan-800 text-gray-200 font-semibold py-2 px-4 rounded-lg transition';
             btn.addEventListener('click', () => generateNumbers(parseInt(btn.dataset.count)));
@@ -410,7 +391,6 @@
         
         closeModalButton.addEventListener('click', hideError);
         
-        // --- Initialisation ---
         const initialSpeed = 1050 - parseInt(speedSlider.value, 10);
         state.animationSpeed = initialSpeed;
         speedValue.textContent = `${initialSpeed}ms`;
